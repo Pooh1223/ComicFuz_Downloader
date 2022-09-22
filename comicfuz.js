@@ -21,9 +21,12 @@ const fs = require('fs');
     //console.log(await page.content());
     
     // type in account and passwd
-    await page.type('input[type="email"]','leo891223@gmail.com');
     
-    await page.type('input[type="password"]','ekids178');
+    var ap = fs.readFileSync('ap.txt','utf-8').toString().split('\n');
+
+    await page.type('input[type="email"]',ap[0]);
+    
+    await page.type('input[type="password"]',ap[1]);
     
     const login_btn = await page.$('button[class*="signin_form"]');
     await login_btn.evaluate(login_btn => login_btn.click());
@@ -104,6 +107,6 @@ const fs = require('fs');
         await newTab.close();
     }
 
-    //await browser.close();
+    await browser.close();
 })();
 

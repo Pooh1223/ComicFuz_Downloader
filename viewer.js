@@ -16,6 +16,8 @@ const readline = require('readline');
     
     //const cookies_path = './cookies.json';
     
+    var comic_path = 'D:/Picture/ComicFuz/';
+    
     let not_login = true;
 
     //while(not_login){
@@ -52,7 +54,6 @@ const readline = require('readline');
     
     // write codes here
 
-    var comic_path = 'D:/Picture/ComicFuz/';
     console.log(comic_path);
     // get into download path
     for(let i = 0;i < lines.length;i += 2){
@@ -71,25 +72,26 @@ const readline = require('readline');
         });
         
         //await page.waitForSelector('#__next > div > div.sc-iCoGMd.kMthTr > div');
-        await page.waitForSelector('#__next > div > div[class*="sc-iCfMLu"] > div');
+        await page.waitForSelector('#__next > div > div[class*="sc-"] > div');
 
         // click page to show the slide bar
     
-        let bar_page_exist = await page.$('#__next > div > div[class*="ViewerFooter_footer"] > p');
+        let bar_page_exist = await page.$('#__next > div > div[class*="ViewerFooter_footer"] > p[class*="ViewerFooter_footer__page"]');
         
         while(bar_page_exist == null){
             await page.mouse.click(400,400);
             try{
                 
-                await page.waitForSelector('div[class*="ViewerFooter_footer"] > p',{timeout: 3000});
+                await page.waitForSelector('div[class*="ViewerFooter_footer"] > p[class*="ViewerFooter_footer__page"]',{timeout: 3000});
 
-                bar_page_exist = await page.$('div[class*="ViewerFooter_footer"] > p');
+                bar_page_exist = await page.$('div[class*="ViewerFooter_footer"] > p[class*="ViewerFooter_footer__page"]');
             } catch(e) {
             }
         }
 
         //let bar_page_inner = await page.$eval('#__next > div > div.ViewerFooter_footer__3E55F > p',el => el.innerHTML.split(' '));
-        let bar_page_inner = await page.$eval('div[class*="ViewerFooter_footer"] > p',el => el.innerHTML.split(' '));
+        let bar_page_inner = await page.$eval('div[class*="ViewerFooter_footer"] > p[class*="ViewerFooter_footer__page"]',el => el.innerHTML.split(' '));
+        console.log("total page / now page");
         console.log(bar_page_inner[bar_page_inner.length - 1]);
         console.log(bar_page_inner[0]);
         let page_num = parseInt(bar_page_inner[bar_page_inner.length - 1],10);
@@ -103,7 +105,7 @@ const readline = require('readline');
         let page_num_cnt = 1;
 
         // may need to add utility to go back to first page
-        for(let j = 0;j < page_num / 2;++j){
+        for(let j = 0;j < page_num / 2 + 1;++j){
             for(let k = 0;k < 2;++k){
                 //let page_img = await page.$x('//img[@alt="page_' + String(j * 2 + k) + '"]');
                 //let page_img_selector = '#__next > div > div > div > div:nth-child(' + String(page_num_cnt) + ') > div > div > img';
@@ -146,14 +148,17 @@ const readline = require('readline');
                 await imgTab.close();
                 
                 page_num_cnt += 1;
-                //if(page_num_cnt == 2) break;
+                if(page_num_cnt >= page_num) break;
             }
             
             // next page
             await page.keyboard.press('ArrowLeft');
             //await page.mouse.click(25,400);
-
-            if(page_num_cnt >= page_num - 2) break;
+            
+            //console.log("page_num_cnt,page_num");
+            //console.log(page_num_cnt);
+            //console.log(page_num);
+            if(page_num_cnt > page_num - 1) break;
         }
         
     }
