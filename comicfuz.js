@@ -71,6 +71,7 @@ const fs = require('fs');
         let series_magazine = await newTab.$$('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div');
 
         for(let j = 1;j <= series_magazine.length;++j){
+            await newTab.waitForSelector('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div:nth-child(' + String(j) + ') > div > div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > div > a');
             let readable = await newTab.$eval('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div:nth-child(' + String(j) + ') > div > div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > div > a',el => el.innerHTML);
             
             // if it is downloadable
@@ -90,6 +91,7 @@ const fs = require('fs');
                     waitUntil: 'networkidle2'
                 });
 
+                await viewerTab.waitForSelector('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div:nth-child(' + String(j) + ') > div > div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > h2');
                 await viewerTab.$eval('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div:nth-child(' + String(j) + ') > div > div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > h2',el => el.click());
                 console.log(viewerTab.url());
 

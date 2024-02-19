@@ -16,7 +16,7 @@ const readline = require('readline');
     
     //const cookies_path = './cookies.json';
     
-    var comic_path = 'D:/Picture/ComicFuz/';
+    var comic_path = 'C:/D/Picture/ComicFuz/';
     
     let not_login = true;
 
@@ -55,7 +55,9 @@ const readline = require('readline');
     // write codes here
 
     console.log(comic_path);
+       
     // get into download path
+    await page.setViewport({width:1080,height: 1920});
     for(let i = 0;i < lines.length;i += 2){
         let magazine_type = lines[i].split('　')[0];
         let complete_path = comic_path + magazine_type + '/' + lines[i];
@@ -71,15 +73,15 @@ const readline = require('readline');
             waitUnitl: 'networkidle2'
         });
         
-        //await page.waitForSelector('#__next > div > div.sc-iCoGMd.kMthTr > div');
-        await page.waitForSelector('#__next > div > div[class*="sc-"] > div');
+        //await page.waitForSelector('#__next > div > div[class*="-container"] > div');
 
+        await page.waitForSelector('#__next > div > div > div[class*="viewer_wrapper"] > div > div');
         // click page to show the slide bar
     
         let bar_page_exist = await page.$('#__next > div > div[class*="ViewerFooter_footer"] > p[class*="ViewerFooter_footer__page"]');
         
         while(bar_page_exist == null){
-            await page.mouse.click(400,400);
+            await page.mouse.click(600,600);
             try{
                 
                 await page.waitForSelector('div[class*="ViewerFooter_footer"] > p[class*="ViewerFooter_footer__page"]',{timeout: 3000});
@@ -98,42 +100,70 @@ const readline = require('readline');
         let page_now = parseInt(bar_page_inner[0],10);
 
         // move to first page
-        for(let j = 0;j < page_now / 2;++j){
+        for(let j = 0;j < page_now;++j){
             await page.keyboard.press('ArrowRight');
         }
         
         let page_num_cnt = 1;
 
         // may need to add utility to go back to first page
-        for(let j = 0;j < page_num / 2 + 1;++j){
-            for(let k = 0;k < 2;++k){
+        for(let j = 1;j <= page_num;++j){
+            // for(let k = 0;k < 2;++k){
                 //let page_img = await page.$x('//img[@alt="page_' + String(j * 2 + k) + '"]');
                 //let page_img_selector = '#__next > div > div > div > div:nth-child(' + String(page_num_cnt) + ') > div > div > img';
-                let page_img_selector = 'img[alt="page_' + String(page_num_cnt - 1) + '"]';
+                await page.waitForSelector('#__next > div > div > div[class*="viewer_wrapper"] > div > div');
+                // click page to show the slide bar
+            
+                let bar_page_exist = await page.$('#__next > div > div[class*="ViewerFooter_footer"] > p[class*="ViewerFooter_footer__page"]');
+                
+                while(bar_page_exist == null){
+                    await page.mouse.click(600,600);
+                    try{
+                        
+                        await page.waitForSelector('div[class*="ViewerFooter_footer"] > p[class*="ViewerFooter_footer__page"]',{timeout: 3000});
+
+                        bar_page_exist = await page.$('div[class*="ViewerFooter_footer"] > p[class*="ViewerFooter_footer__page"]');
+                    } catch(e) {
+                    }
+                }
+                let page_img_selector = 'img[alt="page_' + String(j - 1) + '"]';
 
                 await page.waitForSelector(page_img_selector);
 
                 let page_img = await page.$(page_img_selector);
                 // wait until image is loaded
                 
-                let page_img_url = null;
+                //let page_img_url = null;
+                let screenshoted = false
 
-                while(page_img_url == null){
+                while(!screenshoted){
                     try{
-                        await page.waitForFunction('document.querySelector("img[alt=\'page_' + String(page_num_cnt - 1) + '\']").getAttribute("src") != null');
+                        await page.waitForSelector(page_img_selector,{visible: true});
                         
-                        //await page_img.screenshot({path:complete_path + "/" + String(j * 2 + k + 1) + ".png"});
+                        await page.waitForFunction('document.querySelector("img[alt=\'page_' + String(j - 1) + '\']").complete');
+                        await page.evaluate(() => {return document.readyState === 'complete';});
+                        page_img = await page.$(page_img_selector);
+                        let img_path = complete_path + "/" + String(j) + ".png";
+                        await page_img.screenshot({path:img_path});
+
+                        const img_sz = fs.statSync(img_path);
+                        // if larger than 400 KB , then it's not black
+                        const mx_size = 409600;
+                        if(img_sz.size > mx_size) screenshoted = true;
+
                         // get the url of img
-                        page_img_url = await page_img.evaluate(page_img => page_img.getAttribute('src'));
+                        //page_img_url = await page_img.evaluate(page_img => page_img.getAttribute('src'));
                         //console.log("lagged");
                     } catch(e){
+                        console.log(e);
                     }
                 }
                 
-                console.log(page_num_cnt);
+                console.log(j,"/",page_num);
+                //console.log(page_num_cnt);
                 //console.log(page_img_url);
                 
-                let imgTab = await browser.newPage();
+                /*let imgTab = await browser.newPage();
                 //await imgTab.setViewport({width: 1920,height: 1080});
 
                 await imgTab.goto(page_img_url,{
@@ -145,20 +175,15 @@ const readline = require('readline');
                 // download it
                 let img_raw = await imgTab.$('body > img');
                 await img_raw.screenshot({path: complete_path + "/" + String(j * 2 + k + 1) + ".png"});
-                await imgTab.close();
+                await imgTab.close();*/
                 
-                page_num_cnt += 1;
-                if(page_num_cnt >= page_num) break;
-            }
+                //page_num_cnt += 1;
+                //if(page_num_cnt >= page_num) break;
+            //}
             
             // next page
             await page.keyboard.press('ArrowLeft');
-            //await page.mouse.click(25,400);
             
-            //console.log("page_num_cnt,page_num");
-            //console.log(page_num_cnt);
-            //console.log(page_num);
-            if(page_num_cnt > page_num - 1) break;
         }
         
     }
