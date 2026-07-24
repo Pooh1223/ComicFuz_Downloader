@@ -1,0 +1,8 @@
+*.png
+*.json
+ap.txt
+download_list.txt
+readme.txt
+node_modules/
+*_deprecated.js
+single_*

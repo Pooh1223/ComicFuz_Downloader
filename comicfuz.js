@@ -45,12 +45,12 @@ const fs = require('fs');
     await page.waitForSelector('div[class*="bookshelf_bookshelf"] > div > ul');
 
     // goto bookshelf 
-    const gekkan = await page.$('div[class*="bookshelf_bookshelf"] > div > ul > label:nth-child(3)');
+    const gekkan = await page.$('div[class*="bookshelf_bookshelf"] > div > ul > label:nth-child(4)');
     await gekkan.evaluate(gekkan => gekkan.click());
     
     for(let i = 1;i <= 5;++i){
         // get series url postfix
-        let series = await page.$eval('div[class*="bookshelf_bookshelf"] > section > div > a:nth-child(' + String(i) + ')',el => el.getAttribute('href'));
+        let series = await page.$eval('div[class*="bookshelf_magazines"] > a:nth-child(' + String(i) + ')',el => el.getAttribute('href'));
 
         let series_url = "https://comic-fuz.com" + series;
         
@@ -65,19 +65,27 @@ const fs = require('fs');
 
         let magazine_name = first_magazine.split(' ')[0];
 
-        //console.log(magazine_name);
+        console.log(magazine_name);
         
         // get all listed magazine under certain series
-        let series_magazine = await newTab.$$('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div');
+        let series_magazine = await newTab.$$('div[class*="magazine_issue_detail_outerSection"] div[class*="magazine_issue_detail_wishlist"] > div[class*="MagazineIssueDetail_magazineIssueDetail"]');
+
+        // console.log(series_magazine.length);
 
         for(let j = 1;j <= series_magazine.length;++j){
-            await newTab.waitForSelector('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div:nth-child(' + String(j) + ') > div > div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > div > a');
-            let readable = await newTab.$eval('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div:nth-child(' + String(j) + ') > div > div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > div > a',el => el.innerHTML);
+            await newTab.waitForSelector(`div[class*="magazine_issue_detail_outerSection"] div[class*="magazine_issue_detail_wishlist"] > div[class*="MagazineIssueDetail_magazineIssueDetail"]:nth-child(${j}) div[class*="MagazineIssueDetail_magazineIssueDetail__buttonSection"] > div`);
+
+            let readable = await newTab.$eval(`div[class*="magazine_issue_detail_outerSection"] div[class*="magazine_issue_detail_wishlist"] > div[class*="MagazineIssueDetail_magazineIssueDetail"]:nth-child(${j}) div[class*="MagazineIssueDetail_magazineIssueDetail__buttonSection"] > div`,el => el.innerHTML);
+
+            // console.log(readable);
             
             // if it is downloadable
             if(readable == "読む"){
 
-                let title = await newTab.$eval('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div:nth-child(' + String(j) + ') > div > div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > h2',el => el.innerHTML);
+                //let title = await newTab.$eval('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div:nth-child(' + String(j) + ') > div > div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > h2',el => el.innerHTML);
+
+                let title = await newTab.$eval(`div[class*="magazine_issue_detail_outerSection"] div[class*="magazine_issue_detail_wishlist"] > div[class*="MagazineIssueDetail_magazineIssueDetail"]:nth-child(${j}) div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > h2`,el => el.innerHTML);
+
                 //console.log(title);
                 
                 // write magazine title to download list txt
@@ -91,9 +99,10 @@ const fs = require('fs');
                     waitUntil: 'networkidle2'
                 });
 
-                await viewerTab.waitForSelector('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div:nth-child(' + String(j) + ') > div > div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > h2');
-                await viewerTab.$eval('div[class*="magazine_issue_detail_outerSection"] > div > div > section > div > div:nth-child(' + String(j) + ') > div > div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > h2',el => el.click());
-                console.log(viewerTab.url());
+                await viewerTab.waitForSelector(`div[class*="magazine_issue_detail_outerSection"] div[class*="magazine_issue_detail_wishlist"] > div[class*="MagazineIssueDetail_magazineIssueDetail"]:nth-child(${j}) div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > h2`);
+                // await viewerTab.$eval(`div[class*="magazine_issue_detail_outerSection"] div[class*="magazine_issue_detail_wishlist"] > div[class*="MagazineIssueDetail_magazineIssueDetail"]:nth-child(${j}) div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > h2`,el => el.click());
+                await viewerTab.click(`div[class*="magazine_issue_detail_outerSection"] div[class*="magazine_issue_detail_wishlist"] > div[class*="MagazineIssueDetail_magazineIssueDetail"]:nth-child(${j}) div[class*="MagazineIssueDetail_magazineIssueDetail__rightSection"] > h2`);
+                console.log(await viewerTab.url());
 
                 // write url to download list txt
                 let magazine_url_split = viewerTab.url().split('/');
@@ -103,6 +112,8 @@ const fs = require('fs');
                 });
 
                 viewerTab.close();
+            } else {
+                break;
             }
         }
 

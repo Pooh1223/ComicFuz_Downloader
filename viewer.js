@@ -48,6 +48,8 @@ const readline = require('readline');
         }
     //}    
 
+    console.log("Login successfully");
+
     // read lines
     
     var lines = fs.readFileSync('download_list.txt','utf-8').toString().split('\n');
@@ -107,7 +109,7 @@ const readline = require('readline');
         let page_num_cnt = 1;
 
         // may need to add utility to go back to first page
-        for(let j = 1;j <= page_num;++j){
+        for(let j = 1;j < page_num;++j){
             // for(let k = 0;k < 2;++k){
                 //let page_img = await page.$x('//img[@alt="page_' + String(j * 2 + k) + '"]');
                 //let page_img_selector = '#__next > div > div > div > div:nth-child(' + String(page_num_cnt) + ') > div > div > img';
@@ -134,7 +136,8 @@ const readline = require('readline');
                 // wait until image is loaded
                 
                 //let page_img_url = null;
-                let screenshoted = false
+                let screenshoted = false;
+                let loop_cnt = 0;
 
                 while(!screenshoted){
                     try{
@@ -149,7 +152,9 @@ const readline = require('readline');
                         const img_sz = fs.statSync(img_path);
                         // if larger than 400 KB , then it's not black
                         const mx_size = 409600;
-                        if(img_sz.size > mx_size) screenshoted = true;
+                        if(img_sz.size > mx_size || loop_cnt >= 10) screenshoted = true;
+                        // to avoid some screenshot that is very similar to all black or white
+                        loop_cnt += 1;
 
                         // get the url of img
                         //page_img_url = await page_img.evaluate(page_img => page_img.getAttribute('src'));
